@@ -9,7 +9,34 @@ describe Grape::Validations::CoerceValidator do
     subject
   end
 
-  describe 'coerce' do
+  {
+    String => '',
+    Symbol => :'',
+
+    BigDecimal => nil,
+    Date => nil,
+    DateTime => nil,
+    Float => nil,
+    Grape::API::Boolean => nil,
+    Integer => nil,
+    Numeric => nil,
+    Time => nil
+  }.each do |type, coerced_value|
+    it "coerces empty string to #{coerced_value.inspect} for #{type}" do
+      subject.params do
+        requires :thing, type: type
+      end
+      subject.get '/' do
+        params[:thing] == coerced_value
+      end
+
+      get '/?thing='
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to eq('true')
+    end
+  end
+
+   describe 'coerce' do
     module CoerceValidatorSpec
       class User
         include Virtus.model
